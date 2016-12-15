@@ -1,0 +1,97 @@
+<div class="container">
+    <h3><u>Add new patient</u></h3>
+    <br/>
+    <div class="form-group">
+        <label for="First Name">First Name: </label>
+        <input type="text" id="firstName" ng-model="newPatient.first_name" class="form-control" placeholder="First name">
+    </div>
+    <div class="form-group">
+        <label for="Last Name">Last Name: </label>
+        <input type="text" id="lastName" ng-model="newPatient.last_name" class="form-control" placeholder="Last name">
+    </div>
+    <div class="form-group">
+        <label for="Parent's Name">Parent's Name: </label>
+        <input type="text" id="parentName" ng-model="newPatient.parent_name" class="form-control" placeholder="Parent's name">
+    </div>
+    <div class="form-group">
+        <label for="dob">Date of birth: </label>
+        <input type="text" id="dob" ng-model="newPatient.date_of_birth" class="form-control" placeholder="Date of birth">
+    </div>
+    <div class="form-group">
+        <label for="phone">Phone number: </label>
+        <input type="text" id="phone" ng-model="newPatient.phone" class="form-control" placeholder="Phone number">
+    </div>
+    <div class="form-group">
+        <label for="address">Address: </label>
+        <input type="text" id="address" ng-model="newPatient.address" class="form-control" placeholder="Address">
+    </div>
+    <div class="form-group">
+        <label for="email">Email: </label>
+        <input type="email" id="email" ng-model="newPatient.email" class="form-control" placeholder="email">
+    </div>
+    <div class="form-group">
+        <label for="referral">Referral: </label>
+        <input type="text" id="referral" ng-model="newPatient.referral" class="form-control" placeholder="Referral">
+    </div>
+    <div class="form-group">
+        <label for="reason">Reason: </label>
+        <input type="text" id="reason" ng-model="newPatient.reason" class="form-control" placeholder="Reason">
+    </div>
+    <div class="form-group">
+        <label for="medical history">Medical history: </label>
+        <input type="text" id="medicalHistory" ng-model="newPatient.medical_history" class="form-control" placeholder="Medical history">
+    </div>
+    <div class="form-group">
+        <label for="medication">Medication: </label>
+        <input type="text" id="medication" ng-model="newPatient.medication" class="form-control" placeholder="Medication">
+    </div>
+    <div class="form-group">
+        <label for="previous treatment">Previous treatment: </label>
+        <input type="text" id="prevTreatment" ng-model="newPatient.prevTreatment" class="form-control" placeholder="Previous treatment">
+    </div>
+    <div class="form-group">
+        <label for="first appointment">First appointment: </label>
+        <input type="text" id="firstAppointment" ng-model="newPatient.first_appointment" class="form-control" placeholder="Date of first appointment">
+    </div>
+    <div class="form-group">
+        <label for="payment">Payment: </label>
+        <input type="text" id="payment" ng-model="newPatient.payment" class="form-control" placeholder="Payment">
+    </div>
+    <div class="form-group">
+        <label for="notes">Notes: </label>
+        <textarea type="text" id="notes" ng-model="newPatient.notes" class="form-control" placeholder="Notes..." rows="3"></textarea>
+    </div>
+
+    <!-- bootstrap-imageupload. -->
+    <div class="imageupload panel panel-default">
+        <div class="panel-heading clearfix">
+            <h3 class="panel-title pull-left">Upload Image</h3>
+            <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default active">File</button>
+                <button type="button" class="btn btn-default">URL</button>
+            </div>
+        </div>
+        <div class="file-tab panel-body">
+            <label class="btn btn-default btn-file">
+                <span>Browse</span>
+                <!-- The file is stored here. -->
+                <input type="file" name="image-file">
+            </label>
+            <button type="button" class="btn btn-default">Remove</button>
+        </div>
+        <div class="url-tab panel-body">
+            <div class="input-group">
+                <input type="text" class="form-control hasclear" placeholder="Image URL">
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default">Submit</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-default">Remove</button>
+            <!-- The URL is stored here. -->
+            <input type="hidden" name="image-url">
+        </div>
+    </div>
+    <br/>
+    <button class="btn btn-primary" ng-click="addPatient()">Add Patient</button>
+</div>
+<br/>
