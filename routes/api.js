@@ -54,9 +54,9 @@ function isAuthenticated (req, res, next) {
     })
     //gets all patients
     .get(function(req, res){
-        console.log('debug1');
+        console.log('get all patients request');
         Patient.find(function(err, patients){
-            console.log('debug2');
+            console.log('get all patients find');
             if(err){
                 return res.send(500, err);
             }
@@ -79,7 +79,7 @@ function isAuthenticated (req, res, next) {
             Patient.findById(req.params.id, function(err, patient){
                 if(err)
                     res.send(err);
-
+                console.log('Update Patient!');
                 patient.first_name = req.body.first_name;
                 patient.last_name = req.body.last_name;
                 patient.parent_name = req.body.parent_name;
@@ -96,6 +96,7 @@ function isAuthenticated (req, res, next) {
                 patient.payment = req.body.payment;
                 patient.price = req.body.price;
                 patient.notes = req.body.notes;
+                patient.image_url = req.body.image_url;
 
                 patient.save(function(err, patient){
                 if(err)
@@ -107,6 +108,7 @@ function isAuthenticated (req, res, next) {
         })
         //deletes the patient
         .delete(function(req, res) {
+            console.log('Delete Patient!' + req.params.id);
             Patient.remove({
                 _id: req.params.id
             }, function(err) {

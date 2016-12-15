@@ -22,7 +22,8 @@ var patientSchema = new mongoose.Schema({
                 first_appointment: Date,
                 payment: String,
                 price: String,
-                notes: String
+                notes: String,
+                image_url: String
 });
  
 var appointmentSchema = new mongoose.Schema({
