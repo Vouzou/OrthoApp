@@ -1,0 +1,102 @@
+<h2>{{selectedPatient.first_name}} {{selectedPatient.last_name}} details</h2>
+<br/>
+<div><img class="img-rounded" ng-src="{{selectedPatient.image_url}}" alt="{{selectedPatient.last_name}}" style="height:200px;width:200px"/>
+</div>
+<div ng-show="isEditable" class="imageupload panel panel-default">
+    <div class="panel-heading clearfix">
+        <h3 class="panel-title pull-left">Upload Image</h3>
+        <div class="btn-group pull-right">
+            <button type="button" class="btn btn-default active">File</button>
+            <button type="button" class="btn btn-default">URL</button>
+        </div>
+    </div>
+    <div class="file-tab panel-body">
+        <label class="btn btn-default btn-file">
+            <span>Browse</span>
+            <!-- The file is stored here. -->
+            <input type="file" name="image-file" ng-model="new_image_url">
+        </label>
+        <button type="button" class="btn btn-default">Remove</button>
+    </div>
+    <div class="url-tab panel-body">
+        <div class="input-group">
+            <input type="text" class="form-control hasclear" placeholder="Image URL" ng-model="new_image_url" >
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-default">Submit</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-default">Remove</button>
+        <!-- The URL is stored here. -->
+        <input type="hidden" ng-model="new_image_url">
+    </div>
+</div>
+
+<br/>
+<br/>
+<div class="form-group">
+    <label for="First Name">First Name: </label>
+    <input type="text" id="firstName" ng-model="selectedPatient.first_name" class="form-control" placeholder="First name" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="Last Name">Last Name: </label>
+    <input type="text" id="lastName" ng-model="selectedPatient.last_name" class="form-control" placeholder="Last name" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="Parent's Name">Parent's Name: </label>
+    <input type="text" id="parentName" ng-model="selectedPatient.parent_name" class="form-control" placeholder="Parent's name" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="dob">Date of birth: </label>
+    <input type="text" id="dob" ng-model="selectedPatient.date_of_birth" class="form-control" placeholder="Date of birth" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="phone">Phone number: </label>
+    <input type="text" id="phone" ng-model="selectedPatient.phone" class="form-control" placeholder="Phone number" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="address">Address: </label>
+    <input type="text" id="address" ng-model="selectedPatient.address" class="form-control" placeholder="Address" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="email">Email: </label>
+    <input type="email" id="email" ng-model="selectedPatient.email" class="form-control" placeholder="email" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="referral">Referral: </label>
+    <input type="text" id="referral" ng-model="selectedPatient.referral" class="form-control" placeholder="Referral" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="reason">Reason: </label>
+    <input type="text" id="reason" ng-model="selectedPatient.reason" class="form-control" placeholder="Reason" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="medical history">Medical history: </label>
+    <input type="text" id="medicalHistory" ng-model="selectedPatient.medical_history" class="form-control" placeholder="Medical history" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="medication">Medication: </label>
+    <input type="text" id="medication" ng-model="selectedPatient.medication" class="form-control" placeholder="Medication" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="previous treatment">Previous treatment: </label>
+    <input type="text" id="prevTreatment" ng-model="selectedPatient.prevTreatment" class="form-control" placeholder="Previous treatment" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="first appointment">First appointment: </label>
+    <input type="text" id="firstAppointment" ng-model="selectedPatient.first_appointment" class="form-control" placeholder="Date of first appointment" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="payment">Payment: </label>
+    <input type="text" id="payment" ng-model="selectedPatient.payment" class="form-control" placeholder="Payment" ng-readonly="!isEditable">
+</div>
+<div class="form-group">
+    <label for="notes">Notes: </label>
+    <textarea type="text" id="notes" ng-model="selectedPatient.notes" class="form-control" placeholder="Notes..." rows="3" ng-readonly="!isEditable"></textarea>
+</div>
+<br/>
+<button class="btn btn-primary" ng-click="editPatient()">{{editSaveButtonLabel}}</button>
+<hr>
+<h3>Treatment Images</h3>
+<button class="btn btn-primary">Add Image</button>
+<button class="btn btn-primary">Edit Images</button>
+<br/>
