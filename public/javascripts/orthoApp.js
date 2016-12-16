@@ -59,6 +59,11 @@ function setNavbarToHome() {
     $("#home").addClass("active");
 }
 
+function setNavbarToPatients() {
+    $(".nav").find(".active").removeClass("active");
+    $("#patients").addClass("active");
+}
+
 app.factory('patientService', function($resource){
 	return $resource('/api/patients/:id', null, {
         'update': { method: 'PUT' }
@@ -83,6 +88,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, p
         $scope.patients = patientService.query();
 		$scope.newPatient = {firstName: '', lastName: '', parentName: ''};
         $location.path('/patients');
+        setNavbarToPatients();
 	};
 });
 
@@ -97,6 +103,8 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
         }
         else {
             $scope.editSaveButtonLabel = 'Edit';
+            //Update patient
+            patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
         }
     };
 });
@@ -106,7 +114,7 @@ app.controller('patientListController', function($scope, $rootScope, patientServ
     
     $scope.deletePatient = function(patient) {
         if (confirm('Are you sure you want to delete this patient?')) {
-            patientService.remove({id: patient._id });
+            patientService.remove({id: patient._id});
             $scope.patients = patientService.query();
         }        
     };

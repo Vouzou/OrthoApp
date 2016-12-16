@@ -2,6 +2,29 @@ var express = require('express');
 var router = express.Router();
 var mongoose = require( 'mongoose' );
 var Patient = mongoose.model('Patient');
+
+function updatePatient(inputPatient) {
+    var patient = new Patient();
+    patient.first_name = inputPatient.first_name;
+    patient.last_name = inputPatient.last_name;
+    patient.parent_name = inputPatient.parent_name;
+    patient.date_of_birth = inputPatient.date_of_birth;
+    patient.phone = inputPatient.phone;
+    patient.address = inputPatient.address;
+    patient.email = inputPatient.email;
+    patient.referral = inputPatient.referral;
+    patient.reason = inputPatient.reason;
+    patient.medical_history = inputPatient.medical_history;
+    patient.medication = inputPatient.medication;
+    patient.treatment = inputPatient.treatment;
+    patient.first_appointment = inputPatient.first_appointment;
+    patient.payment = inputPatient.payment;
+    patient.price = inputPatient.price;
+    patient.notes = inputPatient.notes;
+    patient.image_url = inputPatient.image_url;
+    return patient;
+}
+
 //Used for routes that must be authenticated.
 function isAuthenticated (req, res, next) {
 // if user is authenticated in the session, call the next() to call the next request handler
@@ -44,6 +67,7 @@ function isAuthenticated (req, res, next) {
         patient.payment = req.body.payment;
         patient.price = req.body.price;
         patient.notes = req.body.notes;
+        patient.image_url = req.body.image_url;
 
         patient.save(function(err, patient) {
             if (err){

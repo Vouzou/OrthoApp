@@ -74,20 +74,20 @@
         <label class="btn btn-default btn-file">
             <span>Browse</span>
             <!-- The file is stored here. -->
-            <input type="file" name="image-file">
+            <input type="file" name="image-file" ng-model="newPatient.image_url">
         </label>
         <button type="button" class="btn btn-default">Remove</button>
     </div>
     <div class="url-tab panel-body">
         <div class="input-group">
-            <input type="text" class="form-control hasclear" placeholder="Image URL" >
+            <input type="text" class="form-control hasclear" placeholder="Image URL" ng-model="newPatient.image_url" >
             <div class="input-group-btn">
                 <button type="button" class="btn btn-default">Submit</button>
             </div>
         </div>
         <button type="button" class="btn btn-default">Remove</button>
         <!-- The URL is stored here. -->
-        <input type="hidden" name="image-url" ng-model="newPatient.image_url">
+        <input type="hidden" ng-model="newPatient.image_url">
     </div>
 </div>
 <br/>
