@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 var userSchema = mongoose.Schema({
                 username: String,
                 password: String,
+                dropboxToken: String,
                 created_at: {type: Date, default: Date.now}
 });
  

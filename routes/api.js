@@ -40,7 +40,7 @@ function isAuthenticated (req, res, next) {
     }
 
     // if the user is not authenticated then redirect him to the login page
-    return res.redirect('/#login');
+    return res.redirect('/login');
     };
 
     //Register the authentication middleware

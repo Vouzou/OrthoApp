@@ -1,16 +1,24 @@
-var app = angular.module('orthoApp', ['ngRoute', 'ngResource']).run(function($http, $rootScope) {
+var app = angular.module('orthoApp', ['ngRoute', 'ngResource', 'ngCookies']).run(function($http, $rootScope, $cookies) {
+    $rootScope.current_user = $cookies.get('username');
     $rootScope.authenticated = false;
-    $rootScope.current_user = "";
-    $rootScope.selectedPatient = null;
+    if (typeof $rootScope.current_user != 'undefined' && $rootScope.current_user != "") {
+        $rootScope.authenticated = true;
+    }
+    $rootScope.selectedPatient = $cookies.getObject('patient');
+
+    var pathname = window.location.pathname;
+    setNavbar(pathname);
 
 	$rootScope.signout = function(){
 		$http.get('auth/signout');
 		$rootScope.authenticated = false;
         $rootScope.current_user = "";
+        $cookies.remove('username');
+        $cookies.remove('patient');
 	};
-});
+})
 
-app.config(function($routeProvider){
+app.config(function($routeProvider, $locationProvider){
 	$routeProvider
     //the timeline display
     .when('/', {
@@ -42,6 +50,7 @@ app.config(function($routeProvider){
         templateUrl: 'patientList.html',
         controller: 'patientListController'
     });
+    $locationProvider.html5Mode(true);
     updateNavBar();
 });
 
@@ -62,6 +71,21 @@ function setNavbarToHome() {
 function setNavbarToPatients() {
     $(".nav").find(".active").removeClass("active");
     $("#patients").addClass("active");
+}
+
+function setNavbar(pathname) {
+    if (pathname.includes("add")) {
+        $("#addPatient").addClass("active");
+    }
+    else if (pathname.includes("patient")) {
+        $("#patients").addClass("active");
+    }
+    else if (pathname.includes("calendar")) {
+        $("#calendar").addClass("active");
+    }
+    else {
+        $("#home").addClass("active");
+    }
 }
 
 app.factory('patientService', function($resource){
@@ -92,7 +116,10 @@ app.controller('addPatientController', function($scope, $rootScope, $location, p
 	};
 });
 
-app.controller('patientDetailsController', function($scope, $rootScope, patientService) {
+app.controller('patientDetailsController', function($scope, $rootScope, patientService, $cookies) {
+    // We can attach the `fileselect` event to all file inputs on the page
+    var $imageupload = $('.imageupload');
+    $imageupload.imageupload();
     $scope.isEditable = false;
     $scope.editSaveButtonLabel = 'Edit';
 
@@ -104,12 +131,17 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
         else {
             $scope.editSaveButtonLabel = 'Edit';
             //Update patient
+            if ($scope.new_image_url != null) {
+                $rootScope.selectedPatient.image_url = $scope.new_image_url;
+            }
             patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+            //update cookies
+            $cookies.putObject('patient',$rootScope.selectedPatient);
         }
     };
 });
 
-app.controller('patientListController', function($scope, $rootScope, patientService){
+app.controller('patientListController', function($scope, $rootScope, patientService, $cookies){
     $scope.patients = patientService.query();
     
     $scope.deletePatient = function(patient) {
@@ -121,22 +153,26 @@ app.controller('patientListController', function($scope, $rootScope, patientServ
 
     $scope.updateSelectedPatient = function(patient) {
         $rootScope.selectedPatient = patient;
+        $cookies.putObject('patient',patient);
     };
 });
 
-app.controller('authController', function($scope, $http, $rootScope, $location){
+app.controller('authController', function($scope, $http, $rootScope, $location, $cookies){
 	$scope.user = {username: '', password: ''};
 	$scope.error_message = '';
 
 	$scope.login = function(){
 		$http.post('/auth/login', $scope.user).success(function(data){
 			if(data.state == 'success'){
+                alert('success!');
 				$rootScope.authenticated = true;
 				$rootScope.current_user = data.user.username;
 				$location.path('/dashboard');
                 setNavbarToHome();
+                $cookies.put('username',data.user.username);
 			}
 			else{
+                alert('fail!');
 				$scope.error_message = data.message;
 			}
 		});
@@ -145,13 +181,22 @@ app.controller('authController', function($scope, $http, $rootScope, $location){
 	$scope.register = function(){
 		$http.post('/auth/signup', $scope.user).success(function(data){
 			if(data.state == 'success'){
+                alert('sign up success!');
 				$rootScope.authenticated = true;
 				$rootScope.current_user = data.user.username;
+                $cookies.put('username',data.user.username);
 				$location.path('/dashboard');
 			}
 			else{
+                alert('sign up failed!');
 				$scope.error_message = data.message;
 			}
 		});
 	};
+
+    $scope.connectDropbox = function() {
+        $http.get('https://www.dropbox.com/1/oauth2/authorize?client_id=tt6w0lmgryj0dzc&response_type=code&redirect_uri=http://localhost:3000/dashboard');
+        var pathname = window.location.pathname;
+        alert(pathname);
+    };
 });

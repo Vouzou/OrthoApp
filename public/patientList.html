@@ -21,11 +21,11 @@ Search:
   </thread>
   <tbody>
       <tr class="link" ng-repeat="patient in patients | filter:query | orderBy:orderProp" ng-click="showPatient(patient)">
-          <td><a ng-click="updateSelectedPatient(patient)" href="#/patient/{{patient.first_name}}-{{patient.last_name}}">
+          <td><a ng-click="updateSelectedPatient(patient)" href="/patient/{{patient.first_name}}-{{patient.last_name}}">
               <img class="img-rounded" ng-src="{{patient.image_url}}" alt="{{patient.last_name}}" style="height:100px;width:100px"/>
               </a>
           </td>
-          <td valign="middle"><a ng-click="updateSelectedPatient(patient)" href="#/patient/{{patient.first_name}}-{{patient.last_name}}">{{patient.first_name}} {{patient.last_name}}
+          <td valign="middle"><a ng-click="updateSelectedPatient(patient)" href="/patient/{{patient.first_name}}-{{patient.last_name}}">{{patient.first_name}} {{patient.last_name}}
               </a></td>
           <td valign="middle">{{patient.phone}}</td>
           <td><button class="btn btn-primary" ng-click="deletePatient(patient)">Delete</button></td>
