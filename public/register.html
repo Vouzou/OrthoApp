@@ -1,7 +1,7 @@
-<form class="form-auth" ng-submit="register()">
+<div class="form-auth">
 	<h2>Register</h2>
 	<p class="text-warning">{{error_message}}</p>
-	<div class="form-group">
+    <div class="form-group">
     	<label>Username: </label>
 		<input type="username" ng-model="user.username" placeholder="Username" class="form-control"><br>
 	</div>
@@ -9,9 +9,5 @@
 		<label>Password: </label>
 		<input type="password" ng-model="user.password" placeholder="Password" class="form-control"><br>
 	</div>
-	<img src="images/dropbox-windows.png" class="img-rounded" ng-click="connectDropbox()" width="100" height="100" />		
-	<button class="btn btn-primary" ng-click="connectDropbox()">Connect Dropbox</button>
-	<br/>
-	<br/>
-	<input type="submit" value="Sign up" class="btn btn-primary" />
-</form>
+    <button class="btn btn-primary" ng-click="register()">Sign up</button>
+</div>

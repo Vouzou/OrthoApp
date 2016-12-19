@@ -36,4 +36,8 @@ router.get('/register', function (req, res, next) {
     res.sendFile(path.resolve('public/index.html'));
 });
 
+router.get('/dropbox', function (req, res, next) {
+    res.sendFile(path.resolve('public/index.html'));
+});
+
 module.exports = router;

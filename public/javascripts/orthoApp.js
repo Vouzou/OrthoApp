@@ -1,7 +1,9 @@
 var app = angular.module('orthoApp', ['ngRoute', 'ngResource', 'ngCookies']).run(function($http, $rootScope, $cookies) {
     $rootScope.current_user = $cookies.get('username');
+    $rootScope.current_user_id = $cookies.get('userId');
+    $rootScope.dropboxToken = $cookies.get('dropboxToken');
     $rootScope.authenticated = false;
-    if (typeof $rootScope.current_user != 'undefined' && $rootScope.current_user != "") {
+    if (typeof $rootScope.current_user != 'undefined' && $rootScope.current_user != null) {
         $rootScope.authenticated = true;
     }
     $rootScope.selectedPatient = $cookies.getObject('patient');
@@ -12,9 +14,13 @@ var app = angular.module('orthoApp', ['ngRoute', 'ngResource', 'ngCookies']).run
 	$rootScope.signout = function(){
 		$http.get('auth/signout');
 		$rootScope.authenticated = false;
-        $rootScope.current_user = "";
+        $rootScope.current_user = null;
+        $rootScope.dropboxToken = null;
         $cookies.remove('username');
         $cookies.remove('patient');
+        $cookies.remove('dropboxToken');
+        $cookies.remove('dropboxLabel');
+        $cookies.remove('userId');
 	};
 })
 
@@ -49,6 +55,10 @@ app.config(function($routeProvider, $locationProvider){
     .when('/patients', {
         templateUrl: 'patientList.html',
         controller: 'patientListController'
+    })
+    .when('/dropbox', {
+        templateUrl: 'dropbox.html',
+        controller: 'dropboxController'
     });
     $locationProvider.html5Mode(true);
     updateNavBar();
@@ -83,6 +93,9 @@ function setNavbar(pathname) {
     else if (pathname.includes("calendar")) {
         $("#calendar").addClass("active");
     }
+    else if (pathname.includes("dropbox")) {
+        $("#dropbox").addClass("active");
+    }
     else {
         $("#home").addClass("active");
     }
@@ -90,6 +103,12 @@ function setNavbar(pathname) {
 
 app.factory('patientService', function($resource){
 	return $resource('/api/patients/:id', null, {
+        'update': { method: 'PUT' }
+    });
+});
+
+app.factory('dropboxService', function($resource){
+    return $resource('/api/dropbox/:id', null, {
         'update': { method: 'PUT' }
     });
 });
@@ -108,15 +127,49 @@ app.controller('addPatientController', function($scope, $rootScope, $location, p
     $imageupload.imageupload();
     
     $scope.addPatient = function() {
-		patientService.save($scope.newPatient);
-        $scope.patients = patientService.query();
-		$scope.newPatient = {firstName: '', lastName: '', parentName: ''};
-        $location.path('/patients');
-        setNavbarToPatients();
+        var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+        var fileInput = document.getElementById('file-upload');
+        var file = fileInput.files[0];
+        dbx.filesUpload({path: '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
+            .then(function(response) {
+              console.log(response);
+                var xhr = new XMLHttpRequest();
+                if (!xhr) {
+                  throw new Error('CORS not supported');
+                }
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == XMLHttpRequest.DONE) {
+                        var responseText = xhr.responseText;
+                        console.log(responseText);
+                        // process the response.
+                        var obj = JSON.parse(responseText);
+                        var previewStr = 'dl.dropboxusercontent.com';
+                        var replaceStr = 'www.dropbox.com';
+                        $scope.newPatient.image_url = obj.url.replace(replaceStr, previewStr);
+                        patientService.save($scope.newPatient);
+                        $scope.patients = patientService.query();
+                        $scope.newPatient = {firstName: '', lastName: '', parentName: ''};
+                        $location.path('/patients');
+                        setNavbarToPatients();
+                    }
+                };
+
+                xhr.onerror = function() {
+                    console.log('There was an error!');
+                };
+                var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+                xhr.open("POST", url, true);
+                xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.send();
+            })
+            .catch(function(error) {
+              console.error(error);
+            });
 	};
 });
 
-app.controller('patientDetailsController', function($scope, $rootScope, patientService, $cookies) {
+app.controller('patientDetailsController', function($scope, $rootScope, patientService, $cookies, $window) {
     // We can attach the `fileselect` event to all file inputs on the page
     var $imageupload = $('.imageupload');
     $imageupload.imageupload();
@@ -127,16 +180,56 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
         $scope.isEditable = !$scope.isEditable;
         if ($scope.editSaveButtonLabel == 'Edit') {
             $scope.editSaveButtonLabel = 'Save';
+            $window.scrollTo(0, 0);
         }
         else {
             $scope.editSaveButtonLabel = 'Edit';
+            var fileInput = document.getElementById('file-upload');
+            var file = fileInput.files[0];
             //Update patient
             if ($scope.new_image_url != null) {
                 $rootScope.selectedPatient.image_url = $scope.new_image_url;
+                patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+                //update cookies
+                $cookies.putObject('patient',$rootScope.selectedPatient);
             }
-            patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
-            //update cookies
-            $cookies.putObject('patient',$rootScope.selectedPatient);
+            else if (typeof file != 'undefined' && file != null) {
+                var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+                dbx.filesUpload({path: '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
+                    .then(function(response) {
+                      console.log(response);
+                        var xhr = new XMLHttpRequest();
+                        if (!xhr) {
+                          throw new Error('CORS not supported');
+                        }
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState == XMLHttpRequest.DONE) {
+                                var responseText = xhr.responseText;
+                                console.log(responseText);
+                                // process the response.
+                                var obj = JSON.parse(responseText);
+                                var previewStr = 'dl.dropboxusercontent.com';
+                                var replaceStr = 'www.dropbox.com';
+                                $rootScope.selectedPatient.image_url = obj.url.replace(replaceStr, previewStr);
+                                patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+                                //update cookies
+                                $cookies.putObject('patient',$rootScope.selectedPatient);
+                            }
+                        };
+
+                        xhr.onerror = function() {
+                            console.log('There was an error!');
+                        };
+                        var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+                        xhr.open("POST", url, true);
+                        xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        xhr.send();
+                    })
+                    .catch(function(error) {
+                      console.error(error);
+                    });
+            }
         }
     };
 });
@@ -157,22 +250,96 @@ app.controller('patientListController', function($scope, $rootScope, patientServ
     };
 });
 
+app.controller('dropboxController', function($scope, $rootScope, $cookies, $window, dropboxService){
+    var dropboxLabel = $cookies.get('dropboxLabel');
+    if (typeof dropboxLabel == 'undefined' || dropboxLabel == null || dropboxLabel == "") {
+        dropboxLabel = 'Connect Dropbox';
+    }
+    if (dropboxLabel == 'Dropbox Connected') {
+        $("#dropboxButton").removeClass("btn-primary");
+        $("#dropboxButton").addClass("btn-success");
+    }
+    $scope.dropboxLabel = dropboxLabel;
+    var pathname = window.location.search;
+    if (pathname != '' && (typeof $rootScope.dropboxToken == 'undefined' || $rootScope.dropboxToken == null
+       || $rootScope.dropboxToken != '')) {
+        var responseList = pathname.split('&');
+        var codeArr = responseList[0].split('=');
+        //create dropbox api request with the code
+        var code = codeArr[1];
+        var url = 'https://api.dropbox.com/1/oauth2/token?code=' + code + 
+            '&grant_type=authorization_code&client_id=tt6w0lmgryj0dzc&redirect_uri=http://localhost:3000/dropbox' +
+            '&client_secret=9ctz1v0dd3y38mi';
+        var xhr = new XMLHttpRequest();
+        if (!xhr) {
+          throw new Error('CORS not supported');
+        }
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                
+                
+                $scope.dropboxLabel = 'Dropbox Connected';
+                var responseText = xhr.responseText;
+                console.log(responseText);
+                // process the response.
+                var obj = JSON.parse(responseText);
+                $cookies.put('dropboxToken', obj.access_token);
+                //Get user by user id and save the token to the database
+                dropboxService.save({user_id: $rootScope.current_user_id, dropboxToken: obj.access_token});
+                //dropboxService.update({id: $rootScope.current_user_id}, obj.access_token);
+                $("#dropboxButton").removeClass("btn-primary");
+                $("#dropboxButton").addClass("btn-success");
+                $cookies.put('dropboxLabel', 'Dropbox Connected');
+                $rootScope.dropboxToken = obj.access_token;
+            }
+        };
+
+        xhr.onerror = function() {
+            console.log('There was an error!');
+            $("#dropboxButton").removeClass("btn-primary");
+            $("#dropboxButton").addClass("btn-warning");
+            $scope.dropboxLabel = 'Dropbox Not Connected';
+            $cookies.put('dropboxLabel', 'Dropbox Not Connected');
+        };
+        xhr.open("POST", url, true);
+        xhr.send();
+    }
+    
+    $scope.connectDropbox = function() {
+        var url = 'https://www.dropbox.com/1/oauth2/authorize?client_id=tt6w0lmgryj0dzc&response_type=code&redirect_uri=http://localhost:3000/dropbox';
+        $window.location.href = url;
+    };
+    
+    $scope.uploadFile = function() {
+        var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+          var fileInput = document.getElementById('file-upload');
+          var file = fileInput.files[0];
+          dbx.filesUpload({path: '/' + file.name, contents: file})
+            .then(function(response) {
+              console.log(response);
+            })
+            .catch(function(error) {
+              console.error(error);
+            });
+    };
+});
+
 app.controller('authController', function($scope, $http, $rootScope, $location, $cookies){
 	$scope.user = {username: '', password: ''};
 	$scope.error_message = '';
-
+    
 	$scope.login = function(){
 		$http.post('/auth/login', $scope.user).success(function(data){
 			if(data.state == 'success'){
-                alert('success!');
 				$rootScope.authenticated = true;
 				$rootScope.current_user = data.user.username;
+                $rootScope.current_user_id = data.user._id;
 				$location.path('/dashboard');
                 setNavbarToHome();
-                $cookies.put('username',data.user.username);
+                $cookies.put('username', data.user.username);
+                $cookies.put('userId', data.user._id);
 			}
 			else{
-                alert('fail!');
 				$scope.error_message = data.message;
 			}
 		});
@@ -181,22 +348,16 @@ app.controller('authController', function($scope, $http, $rootScope, $location, 
 	$scope.register = function(){
 		$http.post('/auth/signup', $scope.user).success(function(data){
 			if(data.state == 'success'){
-                alert('sign up success!');
 				$rootScope.authenticated = true;
 				$rootScope.current_user = data.user.username;
-                $cookies.put('username',data.user.username);
+                $rootScope.current_user_id = data.user._id;
+                $cookies.put('username', data.user.username);
+                $cookies.put('userId', data.user._id);
 				$location.path('/dashboard');
 			}
 			else{
-                alert('sign up failed!');
 				$scope.error_message = data.message;
 			}
 		});
 	};
-
-    $scope.connectDropbox = function() {
-        $http.get('https://www.dropbox.com/1/oauth2/authorize?client_id=tt6w0lmgryj0dzc&response_type=code&redirect_uri=http://localhost:3000/dashboard');
-        var pathname = window.location.pathname;
-        alert(pathname);
-    };
 });

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var mongoose = require( 'mongoose' );
 var Patient = mongoose.model('Patient');
+var Dropbox = mongoose.model('Dropbox');
 
 function updatePatient(inputPatient) {
     var patient = new Patient();
@@ -88,58 +89,97 @@ function isAuthenticated (req, res, next) {
         });
     });
 
+    router.route('/dropbox')
+    //creates a new patient
+    .post(function(req, res){
+
+        var dropbox = new Dropbox();
+        dropbox.user_id = req.body.user_id;
+        dropbox.token = req.body.dropboxToken;
+        console.log('new dropbox ' + req.body.dropboxToken)
+        dropbox.save(function(err, dropbox) {
+            if (err){
+                return res.send(500, err);
+            }
+            return res.json(dropbox);
+        });
+    });
+    
+    /*router.route('/dropbox/:id')
+    .put(function(req, res){
+        User.findById(req.params.id, function(err, user){
+            if(err)
+                res.send(err);
+            console.log('Update User! ' + req.body);
+            user.dropboxToken = req.body;
+            user.save(function(err, user){
+                if(err)
+                    res.send(err);
+                res.json(user);
+            });
+        })
+    })
+    
+    .get(function(req, res){
+        User.findById(req.params.id, function(err, user){
+            if(err)
+                res.send(err);  
+            res.json(user);
+        });
+    });*/
+
     //patient-specific commands. likely won't be used
     router.route('/patients/:id')
-        //gets specified patient
-        .get(function(req, res){
-            Patient.findById(req.params.id, function(err, patient){
-                if(err)
-                    res.send(err);  
-                res.json(patient);
-            });
-        })
-        //updates specified patient
-        .put(function(req, res){
-            Patient.findById(req.params.id, function(err, patient){
-                if(err)
-                    res.send(err);
-                console.log('Update Patient!');
-                patient.first_name = req.body.first_name;
-                patient.last_name = req.body.last_name;
-                patient.parent_name = req.body.parent_name;
-                patient.date_of_birth = req.body.date_of_birth;
-                patient.phone = req.body.phone;
-                patient.address = req.body.address;
-                patient.email = req.body.email;
-                patient.referral = req.body.referral;
-                patient.reason = req.body.reason;
-                patient.medical_history = req.body.medical_history;
-                patient.medication = req.body.medication;
-                patient.treatment = req.body.treatment;
-                patient.first_appointment = req.body.first_appointment;
-                patient.payment = req.body.payment;
-                patient.price = req.body.price;
-                patient.notes = req.body.notes;
-                patient.image_url = req.body.image_url;
+    //gets specified patient
+    .get(function(req, res){
+        Patient.findById(req.params.id, function(err, patient){
+            if(err)
+                res.send(err);  
+            res.json(patient);
+        });
+    })
+    //updates specified patient
+    .put(function(req, res){
+        Patient.findById(req.params.id, function(err, patient){
+            if(err)
+                res.send(err);
+            console.log('Update Patient!');
+            patient.first_name = req.body.first_name;
+            patient.last_name = req.body.last_name;
+            patient.parent_name = req.body.parent_name;
+            patient.date_of_birth = req.body.date_of_birth;
+            patient.phone = req.body.phone;
+            patient.address = req.body.address;
+            patient.email = req.body.email;
+            patient.referral = req.body.referral;
+            patient.reason = req.body.reason;
+            patient.medical_history = req.body.medical_history;
+            patient.medication = req.body.medication;
+            patient.treatment = req.body.treatment;
+            patient.first_appointment = req.body.first_appointment;
+            patient.payment = req.body.payment;
+            patient.price = req.body.price;
+            patient.notes = req.body.notes;
+            patient.image_url = req.body.image_url;
 
-                patient.save(function(err, patient){
-                if(err)
-                    res.send(err);
+            patient.save(function(err, patient){
+            if(err)
+                res.send(err);
 
-                res.json(patient);
-                });
+            res.json(patient);
             });
-        })
-        //deletes the patient
-        .delete(function(req, res) {
-            console.log('Delete Patient!' + req.params.id);
-            Patient.remove({
-                _id: req.params.id
-            }, function(err) {
-                if (err)
-                    res.send(err);
-                res.json("deleted :(");
-            });
+        });
+    })
+    //deletes the patient
+    .delete(function(req, res) {
+        console.log('Delete Patient!' + req.params.id);
+        Patient.remove({
+            _id: req.params.id
+        }, function(err) {
+            if (err)
+                res.send(err);
+            res.json("deleted :(");
+        });
     });
  
 module.exports = router;
