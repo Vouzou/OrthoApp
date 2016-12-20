@@ -101,6 +101,50 @@ function setNavbar(pathname) {
     }
 }
 
+function uploadProfilePic(patient, callback) {
+	var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+	var fileInput = document.getElementById('file-upload');
+	var file = fileInput.files[0];
+	dbx.filesUpload({path: '/' + patient.first_name + ' ' + patient.last_name + '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
+	    .then(function(response) {
+	      console.log(response);
+		var xhr = new XMLHttpRequest();
+		if (!xhr) {
+		  throw new Error('CORS not supported');
+		}
+		xhr.onreadystatechange = function() {
+		    if (xhr.readyState == XMLHttpRequest.DONE) {
+			var responseText = xhr.responseText;
+			console.log(responseText);
+			// process the response.
+			var obj = JSON.parse(responseText);
+			var previewStr = 'dl.dropboxusercontent.com';
+			var replaceStr = 'www.dropbox.com';
+			patient.image_url = obj.url.replace(replaceStr, previewStr);
+			if (typeof callback === "function") {
+				callback();
+			}
+			/*patientService.save(patient);
+			$scope.patients = patientService.query();
+			$location.path('/patients');
+			setNavbarToPatients();*/
+		    }
+		};
+
+		xhr.onerror = function() {
+		    console.log('There was an error!');
+		};
+		var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+		xhr.open("POST", url, true);
+		xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
+		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		xhr.send();
+	    })
+	    .catch(function(error) {
+	      console.error(error);
+	    });
+}
+
 app.factory('patientService', function($resource){
 	return $resource('/api/patients/:id', null, {
         'update': { method: 'PUT' }
@@ -125,9 +169,19 @@ app.controller('addPatientController', function($scope, $rootScope, $location, p
     // We can attach the `fileselect` event to all file inputs on the page
     var $imageupload = $('.imageupload');
     $imageupload.imageupload();
+	
+	$scope.savePatient = function() {
+		$scope.newPatient.image_url = obj.url.replace(replaceStr, previewStr);
+		patientService.save($scope.newPatient);
+		$scope.patients = patientService.query();
+		$scope.newPatient = {firstName: '', lastName: '', parentName: ''};
+		$location.path('/patients');
+		setNavbarToPatients();
+	}
     
     $scope.addPatient = function() {
-        var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+	 uploadProfilePic($scope.newPatient, savePatient);
+        /*var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
         var fileInput = document.getElementById('file-upload');
         var file = fileInput.files[0];
         dbx.filesUpload({path: '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
@@ -165,7 +219,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, p
             })
             .catch(function(error) {
               console.error(error);
-            });
+            });*/
 	};
 });
 
@@ -175,6 +229,12 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
     $imageupload.imageupload();
     $scope.isEditable = false;
     $scope.editSaveButtonLabel = 'Edit';
+	
+	$scope.updatePatient = function() {
+		patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+		//update cookies
+		$cookies.putObject('patient',$rootScope.selectedPatient);
+	}
 
     $scope.editPatient = function() {
         $scope.isEditable = !$scope.isEditable;
@@ -194,7 +254,8 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                 $cookies.putObject('patient',$rootScope.selectedPatient);
             }
             else if (typeof file != 'undefined' && file != null) {
-                var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
+		    uploadProfilePic($rootScope.selectedPatient, updatePatient);
+                /*var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
                 dbx.filesUpload({path: '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
                     .then(function(response) {
                       console.log(response);
@@ -228,7 +289,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                     })
                     .catch(function(error) {
                       console.error(error);
-                    });
+                    });*/
             }
         }
     };
