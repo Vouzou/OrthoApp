@@ -89,44 +89,52 @@ function isAuthenticated (req, res, next) {
         });
     });
 
-    router.route('/dropbox')
-    //creates a new patient
+    router.route('/dropboxes')
+    .get(function(req, res){
+        Dropbox.find(function(err, dropboxes){
+            console.log('get all dropboxes');
+            if(err){
+                return res.send(500, err);
+            }
+            return res.send(200, dropboxes);
+        });
+    })
+    //creates a new dropbox record
     .post(function(req, res){
 
         var dropbox = new Dropbox();
         dropbox.user_id = req.body.user_id;
         dropbox.token = req.body.dropboxToken;
-        console.log('new dropbox ' + req.body.dropboxToken)
         dropbox.save(function(err, dropbox) {
             if (err){
                 return res.send(500, err);
             }
-            return res.json(dropbox);
+            return res.send(dropbox);
         });
     });
     
-    /*router.route('/dropbox/:id')
-    .put(function(req, res){
-        User.findById(req.params.id, function(err, user){
+    router.route('/dropboxes/:userId')
+    /*.put(function(req, res){
+        Dropbox.findById(req.body.user_id, function(err, dropbox){
             if(err)
                 res.send(err);
-            console.log('Update User! ' + req.body);
-            user.dropboxToken = req.body;
-            user.save(function(err, user){
+            dropbox.dropboxToken = req.body;
+            dropbox.save(function(err, dropbox){
                 if(err)
                     res.send(err);
-                res.json(user);
+                res.json(dropbox);
             });
         })
-    })
+    })*/
     
     .get(function(req, res){
-        User.findById(req.params.id, function(err, user){
+        console.log('user_id: ' + req.params.userId);
+        Dropbox.findOne({'user_id': req.params.userId}, function(err, dropbox){
             if(err)
-                res.send(err);  
-            res.json(user);
+                res.send(err);
+            res.status(200).send(dropbox);
         });
-    });*/
+    });
 
     //patient-specific commands. likely won't be used
     router.route('/patients/:id')
