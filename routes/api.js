@@ -47,11 +47,13 @@ function isAuthenticated (req, res, next) {
     //Register the authentication middleware
     router.use('/patients', isAuthenticated);
 
-    router.route('/patients')
+    router.route('/users/:userId/patients')
     //creates a new patient
     .post(function(req, res){
-
+        console.log('user_id: ' + req.params.userId);
+        console.log('add new patient');
         var patient = new Patient();
+        patient.user_id = req.params.userId;
         patient.first_name = req.body.first_name;
         patient.last_name = req.body.last_name;
         patient.parent_name = req.body.parent_name;
@@ -79,8 +81,9 @@ function isAuthenticated (req, res, next) {
     })
     //gets all patients
     .get(function(req, res){
+        console.log('user_id: ' + req.params.userId);
         console.log('get all patients request');
-        Patient.find(function(err, patients){
+        Patient.find({'user_id': req.params.userId}, function(err, patients){
             console.log('get all patients find');
             if(err){
                 return res.send(500, err);
