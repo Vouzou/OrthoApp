@@ -6,6 +6,9 @@ var app = angular.module('orthoApp', ['ngRoute', 'ngResource', 'ngCookies']).run
     if (typeof $rootScope.current_user != 'undefined' && $rootScope.current_user != null) {
         $rootScope.authenticated = true;
     }
+    if (typeof $rootScope.dropboxToken != 'undefined' && $rootScope.dropboxToken != null) {
+        $cookies.put('dropboxLabel', 'Dropbox Connected');
+    }
     $rootScope.selectedPatient = $cookies.getObject('patient');
 
     var pathname = window.location.pathname;
@@ -56,9 +59,17 @@ app.config(function($routeProvider, $locationProvider){
         templateUrl: 'patientList.html',
         controller: 'patientListController'
     })
+    .when('/calendar', {
+        templateUrl: 'calendar.html',
+        controller: 'calendarController'
+    })
     .when('/dropbox', {
         templateUrl: 'dropbox.html',
         controller: 'dropboxController'
+    })
+    .when('/appointments', {
+        templateUrl: 'appointments.html',
+        controller: 'appointmentsController'
     });
     $locationProvider.html5Mode(true);
     updateNavBar();
@@ -96,6 +107,9 @@ function setNavbar(pathname) {
     else if (pathname.includes("dropbox")) {
         $("#dropbox").addClass("active");
     }
+    else if (pathname.includes("appointment")) {
+        $("#appointments").addClass("active");
+    }
     else {
         $("#home").addClass("active");
     }
@@ -130,7 +144,7 @@ function uploadProfilePic(patient, dropboxToken, callback) {
             xhr.onerror = function() {
                 console.log('There was an error!');
             };
-            var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+            var url = 'https://api.dropboxapi.com/1/shares/auto/' + $rootScope.selectedPatient.first_name + ' ' + $rootScope.selectedPatient.last_name + '/' + file.name + '?short_url=false';
             console.log('url: ' + url);
             xhr.open("POST", url, true);
             xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
@@ -161,12 +175,19 @@ app.factory('dropboxService', function($resource){
     });
 });
 
-app.controller('dashboardController', function($scope, $rootScope){
+app.factory('appointmentService', function($resource){
+    return $resource('/api/users/:userId/:appointmentId?/:dateId?/:patientId?', null, {
+        'update': { method: 'PUT' }
+    });
+});
+
+app.controller('dashboardController', function($scope, $rootScope, appointmentService){
     $scope.date = new Date();
-    $scope.appointments = [{ time: '17:00', patientFirstName: 'Charalampos', patientLastName: 'Karypidis'},
+    /*$scope.appointments = [{ time: '17:00', patientFirstName: 'Charalampos', patientLastName: 'Karypidis'},
                            { time: '18.00', patientFirstName: 'Georgios', patientLastName: 'Vouzounaras'},
                            { time: '19.00', patientFirstName: 'Roula', patientLastName: 'Koromila'}
-                          ];
+                          ];*/
+    //$scope.appointments = appointmentService.query({userId: $rootScope.current_user_id});
 });
 
 app.controller('addPatientController', function($scope, $rootScope, $location, userService){
@@ -177,7 +198,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
     $scope.savePatient = function() {
         $scope.newPatient.image_url = obj.url.replace(replaceStr, previewStr);
         userService.save({userId: $rootScope.current_user_id}, $scope.newPatient);
-        $scope.patients = userService.get({userId: $rootScope.current_user_id});
+        $scope.patients = userService.query({userId: $rootScope.current_user_id});
         $scope.newPatient = {firstName: '', lastName: '', parentName: ''};
         $location.path('/patients');
         setNavbarToPatients();
@@ -190,7 +211,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
             userService.save({userId: $rootScope.current_user_id}, $scope.newPatient);
             //update cookies
             //$cookies.putObject('patient',$rootScope.newPatient);
-            $scope.patients = userService.get({userId: $rootScope.current_user_id});
+            $scope.patients = userService.query({userId: $rootScope.current_user_id});
             $scope.newPatient = {firstName: '', lastName: '', parentName: ''};
             $location.path('/patients');
             setNavbarToPatients();
@@ -216,7 +237,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
                             var replaceStr = 'www.dropbox.com';
                             $scope.newPatient.image_url = obj.url.replace(replaceStr, previewStr);
                             userService.save({userId: $rootScope.current_user_id}, $scope.newPatient);
-                            $scope.patients = userService.get({userId: $rootScope.current_user_id});
+                            $scope.patients = userService.query({userId: $rootScope.current_user_id});
                             $scope.newPatient = {firstName: '', lastName: '', parentName: ''};
                             $location.path('/patients');
                             setNavbarToPatients();
@@ -225,7 +246,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
                     xhr.onerror = function() {
                         console.log('There was an error!');
                     };
-                    var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+                    var url = 'https://api.dropboxapi.com/1/shares/auto/' + $rootScope.selectedPatient.first_name + ' ' + $rootScope.selectedPatient.last_name + '/' + file.name + '?short_url=false';
                     xhr.open("POST", url, true);
                     xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
                     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -239,7 +260,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
             userService.save({userId: $rootScope.current_user_id}, $scope.newPatient);
             //update cookies
             //$cookies.putObject('patient',$rootScope.newPatient);
-            $scope.patients = userService.get({userId: $rootScope.current_user_id});
+            $scope.patients = userService.query({userId: $rootScope.current_user_id});
             $scope.newPatient = {firstName: '', lastName: '', parentName: ''};
             $location.path('/patients');
             setNavbarToPatients();
@@ -255,7 +276,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
     $scope.editSaveButtonLabel = 'Edit';
     
     $scope.updatePatient = function() {
-        patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+        patientService.update({patientId: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
         //update cookies
         $cookies.putObject('patient',$rootScope.selectedPatient);
     }
@@ -273,7 +294,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
             //Update patient
             if ($scope.new_image_url != null) {
                 $rootScope.selectedPatient.image_url = $scope.new_image_url;
-                patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+                patientService.update({patientId: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
                 //update cookies
                 $cookies.putObject('patient',$rootScope.selectedPatient);
             }
@@ -281,7 +302,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                 //uploadProfilePic($rootScope.selectedPatient, $scope.updatePatient);
                 console.log('root token: ' + $rootScope.dropboxToken);
                 var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
-                dbx.filesUpload({path: '/' + patient.first_name + ' ' + patient.last_name + '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
+                dbx.filesUpload({path: '/' + $rootScope.selectedPatient.first_name + ' ' + $rootScope.selectedPatient.last_name + '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
                     .then(function(response) {
                       console.log(response);
                         var xhr = new XMLHttpRequest();
@@ -297,7 +318,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                                 var previewStr = 'dl.dropboxusercontent.com';
                                 var replaceStr = 'www.dropbox.com';
                                 $rootScope.selectedPatient.image_url = obj.url.replace(replaceStr, previewStr);
-                                patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+                                patientService.update({patientId: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
                                 //update cookies
                                 $cookies.putObject('patient',$rootScope.selectedPatient);
                             }
@@ -305,7 +326,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                         xhr.onerror = function() {
                             console.log('There was an error!');
                         };
-                        var url = 'https://api.dropboxapi.com/1/shares/auto/' + file.name + '?short_url=false';
+                        var url = 'https://api.dropboxapi.com/1/shares/auto/' + $rootScope.selectedPatient.first_name + ' ' + $rootScope.selectedPatient.last_name + '/' + file.name + '?short_url=false';
                         xhr.open("POST", url, true);
                         xhr.setRequestHeader("Authorization", "Bearer D09eGuemEpoAAAAAAAAUXU9zWmdZ3IMpJ_mBb0659H4UyGcAl_Qg5AGwWDZNU25J");
                         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -316,7 +337,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
                     });
             }
             else {
-                patientService.update({id: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
+                patientService.update({patientId: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
                 //update cookies
                 $cookies.putObject('patient',$rootScope.selectedPatient);
             }
@@ -325,12 +346,12 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
 });
 
 app.controller('patientListController', function($scope, $rootScope, userService, patientService, $cookies){
-    $scope.patients = userService.get({userId: $rootScope.current_user_id});
+    $scope.patients = userService.query({userId: $rootScope.current_user_id});
     
     $scope.deletePatient = function(patient) {
         if (confirm('Are you sure you want to delete this patient?')) {
-            patientService.remove({id: patient._id});
-            $scope.patients = userService.get({userId: $rootScope.current_user_id});
+            patientService.remove({patientId: patient._id});
+            $scope.patients = userService.query({userId: $rootScope.current_user_id});
         }        
     };
 
@@ -356,43 +377,52 @@ app.controller('dropboxController', function($scope, $rootScope, $cookies, $wind
         var responseList = pathname.split('&');
         var codeArr = responseList[0].split('=');
         //create dropbox api request with the code
-        var code = codeArr[1];
-        var url = 'https://api.dropbox.com/1/oauth2/token?code=' + code + 
-            '&grant_type=authorization_code&client_id=tt6w0lmgryj0dzc&redirect_uri=http://localhost:3000/dropbox' +
-            '&client_secret=9ctz1v0dd3y38mi';
-        var xhr = new XMLHttpRequest();
-        if (!xhr) {
-          throw new Error('CORS not supported');
-        }
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE) {
-                
-                
-                $scope.dropboxLabel = 'Dropbox Connected';
-                var responseText = xhr.responseText;
-                console.log(responseText);
-                // process the response.
-                var obj = JSON.parse(responseText);
-                $cookies.put('dropboxToken', obj.access_token);
-                //Get user by user id and save the token to the database
-                dropboxService.save({user_id: $rootScope.current_user_id, dropboxToken: obj.access_token});
-                //dropboxService.update({id: $rootScope.current_user_id}, obj.access_token);
-                $("#dropboxButton").removeClass("btn-primary");
-                $("#dropboxButton").addClass("btn-success");
-                $cookies.put('dropboxLabel', 'Dropbox Connected');
-                $rootScope.dropboxToken = obj.access_token;
-            }
-        };
-
-        xhr.onerror = function() {
+        if (codeArr[0] != '?code') {
             console.log('There was an error!');
             $("#dropboxButton").removeClass("btn-primary");
             $("#dropboxButton").addClass("btn-warning");
             $scope.dropboxLabel = 'Dropbox Not Connected';
             $cookies.put('dropboxLabel', 'Dropbox Not Connected');
-        };
-        xhr.open("POST", url, true);
-        xhr.send();
+        }
+        else {
+            var code = codeArr[1];
+            var url = 'https://api.dropbox.com/1/oauth2/token?code=' + code + 
+                '&grant_type=authorization_code&client_id=tt6w0lmgryj0dzc&redirect_uri=http://localhost:3000/dropbox' +
+                '&client_secret=9ctz1v0dd3y38mi';
+            var xhr = new XMLHttpRequest();
+            if (!xhr) {
+              throw new Error('CORS not supported');
+            }
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+
+
+                    $scope.dropboxLabel = 'Dropbox Connected';
+                    var responseText = xhr.responseText;
+                    console.log(responseText);
+                    // process the response.
+                    var obj = JSON.parse(responseText);
+                    $cookies.put('dropboxToken', obj.access_token);
+                    //Get user by user id and save the token to the database
+                    dropboxService.save({user_id: $rootScope.current_user_id, dropboxToken: obj.access_token});
+                    //dropboxService.update({id: $rootScope.current_user_id}, obj.access_token);
+                    $("#dropboxButton").removeClass("btn-primary");
+                    $("#dropboxButton").addClass("btn-success");
+                    $cookies.put('dropboxLabel', 'Dropbox Connected');
+                    $rootScope.dropboxToken = obj.access_token;
+                }
+            };
+
+            xhr.onerror = function() {
+                console.log('There was an error!');
+                $("#dropboxButton").removeClass("btn-primary");
+                $("#dropboxButton").addClass("btn-warning");
+                $scope.dropboxLabel = 'Dropbox Not Connected';
+                $cookies.put('dropboxLabel', 'Dropbox Not Connected');
+            };
+            xhr.open("POST", url, true);
+            xhr.send();
+        }
     }
     
     $scope.connectDropbox = function() {
@@ -456,4 +486,21 @@ app.controller('authController', function($scope, $http, $rootScope, $location, 
             }
         });
     };
+});
+
+app.controller('calendarController', function($scope, $http, $rootScope, $location, $cookies, appointmentService) {
+
+});
+
+app.controller('appointmentsController', function($scope, $http, $rootScope, $location, $cookies, appointmentService, userService) {
+    $scope.patients = userService.query({userId: $rootScope.current_user_id});
+    $scope.appointment = {
+        date_time: "",
+        reason: ""
+    };
+    
+    $scope.addAppointment = function() {
+        console.log('patientId = ' + $scope.selectedPatient);
+        appointmentService.save({appointmentId: 123, userId: $rootScope.current_user_id}, $scope.appointment);
+    }
 });
