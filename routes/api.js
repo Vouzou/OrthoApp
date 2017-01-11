@@ -3,6 +3,7 @@ var router = express.Router();
 var mongoose = require( 'mongoose' );
 var Patient = mongoose.model('Patient');
 var Dropbox = mongoose.model('Dropbox');
+var Appointment = mongoose.model('Appointment');
 
 function updatePatient(inputPatient) {
     var patient = new Patient();
@@ -104,7 +105,6 @@ function isAuthenticated (req, res, next) {
     })
     //creates a new dropbox record
     .post(function(req, res){
-
         var dropbox = new Dropbox();
         dropbox.user_id = req.body.user_id;
         dropbox.token = req.body.dropboxToken;
@@ -117,19 +117,6 @@ function isAuthenticated (req, res, next) {
     });
     
     router.route('/dropboxes/:userId')
-    /*.put(function(req, res){
-        Dropbox.findById(req.body.user_id, function(err, dropbox){
-            if(err)
-                res.send(err);
-            dropbox.dropboxToken = req.body;
-            dropbox.save(function(err, dropbox){
-                if(err)
-                    res.send(err);
-                res.json(dropbox);
-            });
-        })
-    })*/
-    
     .get(function(req, res){
         console.log('user_id: ' + req.params.userId);
         Dropbox.findOne({'user_id': req.params.userId}, function(err, dropbox){
@@ -189,8 +176,129 @@ function isAuthenticated (req, res, next) {
         }, function(err) {
             if (err)
                 res.send(err);
-            res.json("deleted :(");
+            res.json("deleted");
         });
     });
+
+    router.route('/users/:userId/patients/:patientId')
+    .post(function(req, res){
+        console.log('user_id: ' + req.params.userId);
+        console.log('patient_id: ' + req.params.patientId);
+        console.log('add new appointment');
+        var appointment = new Appointment();
+        appointment.user_id = req.params.userId;
+        appointment.patient_id = req.params.patientId;
+        appointment.date_time = req.body.date_time;
+        appointment.reason = req.body.reason;
+
+        appointment.save(function(err, appointment) {
+            if (err){
+                return res.status(500).send(err);
+            }
+            return res.json(appointment);
+        });
+    })
+
+    router.route('/users/:userId/:appointmentId?/:dateId?/:patientId?')
+    .post(function(req, res){
+        console.log('user_id: ' + req.params.userId);
+        console.log('patient_id: ' + req.params.appointmentId);
+        console.log('reason: ' + req.body.reason);
+        console.log('add new appointment');
+        var appointment = new Appointment();
+        appointment.user_id = req.params.userId;
+        appointment.patient_id = req.params.patientId;
+        appointment.date_time = req.body.date_time;
+        appointment.reason = req.body.reason;
+
+        appointment.save(function(err, appointment) {
+            if (err){
+                return res.status(500).send(err);
+            }
+            return res.json(appointment);
+        });
+    })
+    //updates specified appointment
+    .put(function(req, res){
+        Appointment.findById(req.params.id, function(err, appointment){
+            if(err)
+                res.send(err);
+            console.log('Update Appointment!');
+            appointment.date_time = req.body.date_time;
+            appointment.reason = req.body.reason;
+
+            patient.save(function(err, appointment){
+            if(err)
+                res.send(err);
+
+            res.json(appointment);
+            });
+        });
+    })
+    //deletes the appointment
+    .delete(function(req, res) {
+        console.log('Delete appointment!' + req.params.id);
+        Appointment.remove({
+            _id: req.params.id
+        }, function(err) {
+            if (err)
+                res.send(err);
+            res.json("deleted");
+        });
+    })
+    /*//return all the appointments for the specified user
+    .get(function(req, res){
+        console.log('user_id: ' + req.params.userId);
+        console.log('get all appointments request');
+        Appointment.find({'user_id': req.params.userId}, function(err, appointments){
+            console.log('get all appointments find');
+            if(err){
+                return res.status(500).send(err);
+            }
+            return res.status(200).send(appointments);
+        });
+    })*/
+    //return all the appointments for the specified user and specified patient
+    .get(function(req, res){
+        console.log('user_id: ' + req.params.userId);
+        console.log('patient_id: ' + req.params.patientId);
+        console.log('appointment_id ' + req.params.appointmentId);
+        if (req.params.appointmentId != null) {
+            console.log('get appointment by id');
+            Appointment.findById(req.params.id, function(err, appointment){
+                if(err)
+                    return res.send(err);  
+                return res.json(appointment);
+            });
+        }
+        if (req.params.date != null) {
+            console.log('get appointment by date');
+            Appointment.find({'user_id': req.params.userId, 'date_time': req.params.dateId}, function(err, appointments){
+                if(err){
+                    return res.status(500).send(err);
+                }
+                return res.status(200).send(appointments);
+            });
+        }
+        console.log('get all appointments request');
+        Appointment.find({'user_id': req.params.userId, 'patient_id': req.params.patientId}, function(err, appointments){
+            console.log('get all appointments find');
+            if(err){
+                return res.status(500).send(err);
+            }
+            return res.status(200).send(appointments);
+        });
+    })
+
+    /*router.route('/appointments/:id')
+    //gets specified appointment
+    .get(function(req, res){
+        Appointment.findById(req.params.id, function(err, appointment){
+            if(err)
+                res.send(err);  
+            res.json(appointment);
+        });
+    })*/
+    
  
 module.exports = router;
