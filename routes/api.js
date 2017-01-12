@@ -85,7 +85,6 @@ function isAuthenticated (req, res, next) {
         console.log('user_id: ' + req.params.userId);
         console.log('get all patients request');
         Patient.find({'user_id': req.params.userId}, function(err, patients){
-            console.log('get all patients find');
             if(err){
                 return res.send(500, err);
             }
@@ -180,37 +179,24 @@ function isAuthenticated (req, res, next) {
         });
     });
 
-    router.route('/users/:userId/patients/:patientId')
+    router.route('/users/:userId/appointment')
     .post(function(req, res){
         console.log('user_id: ' + req.params.userId);
-        console.log('patient_id: ' + req.params.patientId);
+        console.log('patient_id: ' + req.query.patient_id);
+        console.log('reason: ' + req.query.reason);
+        console.log('date time:' + req.query.date_time);
         console.log('add new appointment');
         var appointment = new Appointment();
         appointment.user_id = req.params.userId;
-        appointment.patient_id = req.params.patientId;
-        appointment.date_time = req.body.date_time;
-        appointment.reason = req.body.reason;
-
-        appointment.save(function(err, appointment) {
-            if (err){
-                return res.status(500).send(err);
-            }
-            return res.json(appointment);
-        });
-    })
-
-    router.route('/users/:userId/:appointmentId?/:dateId?/:patientId?')
-    .post(function(req, res){
-        console.log('user_id: ' + req.params.userId);
-        console.log('patient_id: ' + req.params.appointmentId);
-        console.log('reason: ' + req.body.reason);
-        console.log('add new appointment');
-        var appointment = new Appointment();
-        appointment.user_id = req.params.userId;
-        appointment.patient_id = req.params.patientId;
-        appointment.date_time = req.body.date_time;
-        appointment.reason = req.body.reason;
-
+        if (req.query.patient_id) {
+            appointment.patient_id = req.query.patient_id;
+        }
+        if (req.query.date_time) {
+            appointment.date_time = req.query.date_time;
+        }
+        if (req.query.reason) {
+            appointment.reason = req.query.reason;
+        }
         appointment.save(function(err, appointment) {
             if (err){
                 return res.status(500).send(err);
@@ -220,13 +206,19 @@ function isAuthenticated (req, res, next) {
     })
     //updates specified appointment
     .put(function(req, res){
-        Appointment.findById(req.params.id, function(err, appointment){
+        Appointment.findById(req.query.appointment_id, function(err, appointment){
             if(err)
                 res.send(err);
             console.log('Update Appointment!');
-            appointment.date_time = req.body.date_time;
-            appointment.reason = req.body.reason;
-
+            if (req.query.date_time) {
+                appointment.date_time = req.query.date_time;
+            }
+            if (req.query.reason) {
+                appointment.reason = req.query.reason;
+            }
+            if (req.query.patient_id) {
+                appointment.patient_id = req.query.patient_id;
+            }
             patient.save(function(err, appointment){
             if(err)
                 res.send(err);
@@ -237,68 +229,53 @@ function isAuthenticated (req, res, next) {
     })
     //deletes the appointment
     .delete(function(req, res) {
-        console.log('Delete appointment!' + req.params.id);
+        console.log('Delete appointment!' + req.query.appointment_id);
         Appointment.remove({
-            _id: req.params.id
+            _id: req.query.appointment_id
         }, function(err) {
             if (err)
                 res.send(err);
             res.json("deleted");
         });
     })
-    /*//return all the appointments for the specified user
-    .get(function(req, res){
-        console.log('user_id: ' + req.params.userId);
-        console.log('get all appointments request');
-        Appointment.find({'user_id': req.params.userId}, function(err, appointments){
-            console.log('get all appointments find');
-            if(err){
-                return res.status(500).send(err);
-            }
-            return res.status(200).send(appointments);
-        });
-    })*/
     //return all the appointments for the specified user and specified patient
     .get(function(req, res){
         console.log('user_id: ' + req.params.userId);
-        console.log('patient_id: ' + req.params.patientId);
-        console.log('appointment_id ' + req.params.appointmentId);
-        if (req.params.appointmentId != null) {
+        console.log('patient_id: ' + req.query.patient_id);
+        console.log('appointment_id ' + req.query.appointment_id);
+        if (req.query.appointment_id) {
             console.log('get appointment by id');
-            Appointment.findById(req.params.id, function(err, appointment){
+            Appointment.findById(req.query.appointment_id, function(err, appointment){
                 if(err)
                     return res.send(err);  
                 return res.json(appointment);
             });
         }
-        if (req.params.date != null) {
+        if (req.query.date_time) {
             console.log('get appointment by date');
-            Appointment.find({'user_id': req.params.userId, 'date_time': req.params.dateId}, function(err, appointments){
+            Appointment.find({'user_id': req.params.userId, 'date_time': req.query.date_time}, function(err, appointments){
                 if(err){
                     return res.status(500).send(err);
                 }
                 return res.status(200).send(appointments);
             });
         }
-        console.log('get all appointments request');
-        Appointment.find({'user_id': req.params.userId, 'patient_id': req.params.patientId}, function(err, appointments){
-            console.log('get all appointments find');
+        if (req.query.patient_id) {
+            console.log('get all appointments for specific patient request');
+            Appointment.find({'user_id': req.params.userId, 'patient_id': req.query.patient_id}, function(err, appointments){
+                if(err){
+                    return res.status(500).send(err);
+                }
+                return res.status(200).send(appointments);
+            });
+        }
+        console.log('get all appointments for specific user request');
+        Appointment.find({'user_id': req.params.userId}, function(err, appointments){
             if(err){
                 return res.status(500).send(err);
             }
             return res.status(200).send(appointments);
         });
     })
-
-    /*router.route('/appointments/:id')
-    //gets specified appointment
-    .get(function(req, res){
-        Appointment.findById(req.params.id, function(err, appointment){
-            if(err)
-                res.send(err);  
-            res.json(appointment);
-        });
-    })*/
     
- 
 module.exports = router;
