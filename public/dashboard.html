@@ -9,10 +9,10 @@
       </tr>
   </thread>
   <tbody>
-      <tr ng-repeat="a in appointments" ng-click="showPatient(patient)">
-          <td>{{a.time}}</td>
-          <td><a href="#/patient/{{a.patientFirstName}}-{{a.patientLastName}}">{{a.patientFirstName}} {{a.patientLastName}}
-              </a></td>
+      <tr ng-repeat="a in appointments">
+          <td ng-show=a.date_time>{{a.date_time}}</td>
+          <td>{{a.user_id}}</td>
+          <td>1</td>
       </tr>
   </tbody>
 </table>
