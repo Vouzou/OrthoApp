@@ -175,19 +175,16 @@ app.factory('dropboxService', function($resource){
     });
 });
 
-app.factory('appointmentService', function($resource){
-    return $resource('/api/users/:userId/:appointmentId?/:dateId?/:patientId?', null, {
-        'update': { method: 'PUT' }
-    });
-});
-
-app.controller('dashboardController', function($scope, $rootScope, appointmentService){
+app.controller('dashboardController', function($scope, $rootScope, $http){
     $scope.date = new Date();
-    /*$scope.appointments = [{ time: '17:00', patientFirstName: 'Charalampos', patientLastName: 'Karypidis'},
-                           { time: '18.00', patientFirstName: 'Georgios', patientLastName: 'Vouzounaras'},
-                           { time: '19.00', patientFirstName: 'Roula', patientLastName: 'Koromila'}
-                          ];*/
-    //$scope.appointments = appointmentService.query({userId: $rootScope.current_user_id});
+    $scope.appointments = $http.get('/api/users/' + $rootScope.current_user_id + '/appointment');
+    //console.log($scope.appointments);
+    var result = [];
+    for(var i in $scope.appointments)
+        result.push([i, $scope.appointments [i]]);
+    result.forEach(function(a){
+        console.log(a);
+    })
 });
 
 app.controller('addPatientController', function($scope, $rootScope, $location, userService){
@@ -492,7 +489,7 @@ app.controller('calendarController', function($scope, $http, $rootScope, $locati
 
 });
 
-app.controller('appointmentsController', function($scope, $http, $rootScope, $location, $cookies, appointmentService, userService) {
+app.controller('appointmentsController', function($scope, $http, $rootScope, $location, $cookies, userService) {
     $scope.patients = userService.query({userId: $rootScope.current_user_id});
     $scope.appointment = {
         date_time: "",
@@ -501,6 +498,8 @@ app.controller('appointmentsController', function($scope, $http, $rootScope, $lo
     
     $scope.addAppointment = function() {
         console.log('patientId = ' + $scope.selectedPatient);
-        appointmentService.save({appointmentId: 123, userId: $rootScope.current_user_id}, $scope.appointment);
+        //appointmentService.save({userId: $rootScope.current_user_id}, $scope.appointment);
+        $http.post('/api/users/' + $rootScope.current_user_id + '/appointment?patient_id=' + $scope.selectedPatient
+                   + '&date_time=' + $scope.appointment.date_time + '&reason=' + $scope.appointment.reason , $scope.user);
     }
 });
