@@ -30,8 +30,9 @@ var patientSchema = new mongoose.Schema({
  
 var appointmentSchema = new mongoose.Schema({
         user_id: String,
-        patient_name: String,
-        date_time: Date
+        patient_id: String,
+        date_time: Date,
+        reason: String
 });
 
 var dropboxSchema = new mongoose.Schema({
