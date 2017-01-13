@@ -40,4 +40,8 @@ router.get('/dropbox', function (req, res, next) {
     res.sendFile(path.resolve('public/index.html'));
 });
 
+router.get('/appointments', function (req, res, next) {
+    res.sendFile(path.resolve('public/index.html'));
+});
+
 module.exports = router;
