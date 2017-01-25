@@ -14,8 +14,13 @@
         <script src="javascripts/bootstrap-imageupload.js"></script>
         <script src="javascripts/bower_components/moment/moment.js"></script>
         <script src="javascripts/bower_components/underscore/underscore.js"></script>
-        <script src="javascripts/bower_components/bootstrap/less/bootstrap.less"></script>
         <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+        <script src="javascripts/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+        <script src="javascripts/bower_components/moment/locale/el.js"></script>
+        <script src="javascripts/fullcalendar.js"></script>
+        <link rel="stylesheet" href="javascripts/fullcalendar.css">
+        <link rel="stylesheet" href="javascripts/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+        <link rel="stylesheet" src="javascripts/bower_components/bootstrap/less/bootstrap.less">
         <link rel="stylesheet" href="stylesheets/bootstrap-imageupload.css" >
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
@@ -23,29 +28,27 @@
 	</head>
 	<body ng-app="orthoApp">
 		<div class="container">
-            <nav class="navbar navbar-default navbar-fixed-top">
+            <nav class="navbar navbar-default navbar-fixed-top nav">
               <div class="container">
                   <div class="header">
                       <a class="navbar-brand" href="/">Ortho App</a>
                       <p class="navbar-text"> Helps you manage your patients </p>
                       <p class="navbar-right navbar-text" ng-hide="authenticated"><a href="/login">Login</a> or <a href="/register" ng-hide="authenticated">Register</a></p>
-						<p class="navbar-right navbar-text" ng-show="authenticated"><a href="/" ng-click="signout()">Logout</a></p>
-						<p class="navbar-right navbar-text" ng-show="authenticated">Signed in as {{current_user}}</p>
+                    <p class="navbar-right navbar-text" ng-show="authenticated"><a href="/" ng-click="signout()">Logout</a></p>
+                    <p class="navbar-right navbar-text" ng-show="authenticated"><a href="/dropbox">Sync Dropbox</a></p>  
+                    <p class="navbar-right navbar-text" ng-show="authenticated">Signed in as {{current_user}}</p>
                   </div>
                   <ul ng-show="authenticated" class="nav navbar-nav">
                       <li id="home"><a href="dashboard">Home</a></li>
                       <li id="patients"><a href="/patients">Patients</a></li>
                       <li id="addPatient"><a href="/addPatient">Add Patient</a></li>
-                      <li id="calendar"><a href="/calendar">Calendar</a></li>
-                      <li id="dropbox"><a href="/dropbox">Sync Dropbox</a></li>
-                      <li id="appointments"><a href="/appointments">Appointments</a></li>
+                      <li id="calendarNav"><a href="/calendar">Calendar</a></li>
+                      <li id="appointments"><a href="/appointments">Add Appointment</a></li>
                   </ul>
               </div>
             </nav>
-            <div class="col-md-offset-2 col-md-8">
-                <div ng-view>
-                </div>
-            </div>
+            <hr>
+            <div ng-view class="container" />
 		</div>
 	</body>
 </html>

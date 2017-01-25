@@ -1,18 +1,23 @@
 <p>Thessaloniki, {{date | date:'dd-MM-yyyy'}}</p>
 <h2>Greetings {{current_user}}!</h2>
-<h3>Today's Appointments:</h3>
+<h3>Appointments:</h3>
 <table class="table table-hover">
   <thread>
       <tr>
-          <th>Time</th>
+          <th>Date/Time</th>
           <th>Patient</th>
+          <th/><th/>
       </tr>
   </thread>
   <tbody>
-      <tr ng-repeat="a in appointments">
-          <td ng-show=a.date_time>{{a.date_time}}</td>
-          <td>{{a.user_id}}</td>
-          <td>1</td>
+      <tr ng-repeat="a in appointments | orderBy: 'date_time'">
+          <td style="vertical-align:middle" class="col-md-3">{{a.date_time | date:'EEE dd/MM HH:mm'}}</td>
+          <td style="vertical-align:middle" class="col-md-3"><a ng-click="updateSelectedPatient(a.patient)" href="/patient/{{a.patient.first_name}} {{a.patient.lat_name}}">{{a.patient.first_name}} {{a.patient.last_name}}</a></td>
+          <td style="vertical-align:middle" class="col-md-3"><a ng-show=a.photo href="/patient/{{a.patient.first_name}} {{a.patient.last_name}}">
+              <img class="img-thumbnail" ng-src="{{a.patient.image_url}}" style="width:50%"/>
+              </a>
+          </td>
+          <td align="center" style="vertical-align:middle" class="col-md-1"><button class="btn btn-primary">Edit</button></td>
       </tr>
   </tbody>
 </table>

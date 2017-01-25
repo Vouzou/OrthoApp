@@ -1,8 +1,19 @@
 <h3><u>Add new appointment</u></h3>
 <br/>
 <div class="form-group">
-    <label for="Date">Date: </label>
-    <input type="text" id="date" ng-model="appointment.date_time" class="form-control" placeholder="Date">
+    <label for="Date">Date/Time:</label>
+    <div class="row">
+        <div class='col-sm-6'>
+            <div class="form-group">
+                <div class='input-group date' id='datetimepicker'>
+                    <input type='text' class="form-control" placeholder="Date"/>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Look up patients. Dropdown with first name, last name, profile pic -->
 <div class="form-group">
@@ -18,5 +29,5 @@
 </div>
 
 <br/>
-<button class="btn btn-primary" ng-click="addAppointment()">Add Appointment</button>
+<button class="btn btn-primary" ng-click="addAppointment()" ng-disabled="!selectedPatient">Add Appointment</button>
 <br/>
