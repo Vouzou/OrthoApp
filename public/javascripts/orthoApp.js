@@ -25,6 +25,11 @@ var app = angular.module('orthoApp', ['ngRoute', 'ngResource', 'ngCookies']).run
         $cookies.remove('dropboxLabel');
         $cookies.remove('userId');
     };
+    
+    $rootScope.updateSelectedPatient = function(patient) {
+        $rootScope.selectedPatient = patient;
+        $cookies.putObject('patient',patient);
+    };
 })
 
 app.config(function($routeProvider, $locationProvider){
@@ -102,10 +107,7 @@ function setNavbar(pathname) {
         $("#patients").addClass("active");
     }
     else if (pathname.includes("calendar")) {
-        $("#calendar").addClass("active");
-    }
-    else if (pathname.includes("dropbox")) {
-        $("#dropbox").addClass("active");
+        $("#calendarNav").addClass("active");
     }
     else if (pathname.includes("appointment")) {
         $("#appointments").addClass("active");
@@ -175,16 +177,19 @@ app.factory('dropboxService', function($resource){
     });
 });
 
-app.controller('dashboardController', function($scope, $rootScope, $http){
+app.controller('dashboardController', function($scope, $rootScope, $http, patientService){
     $scope.date = new Date();
-    $scope.appointments = $http.get('/api/users/' + $rootScope.current_user_id + '/appointment');
-    //console.log($scope.appointments);
-    var result = [];
-    for(var i in $scope.appointments)
-        result.push([i, $scope.appointments [i]]);
-    result.forEach(function(a){
-        console.log(a);
-    })
+    $http.get('/api/users/' + $rootScope.current_user_id + '/appointment').success(function(data){
+        data.forEach(function(app){
+            app.date_time = Date.parse(app.date_time);
+            //Get patient's name from id
+            $http.get('/api/patients/' + app.patient_id).success(function(patient){
+                app.patient = patient;
+                app.photo = patient.image_url;
+            });
+        });
+        $scope.appointments = data;
+    });
 });
 
 app.controller('addPatientController', function($scope, $rootScope, $location, userService){
@@ -217,7 +222,7 @@ app.controller('addPatientController', function($scope, $rootScope, $location, u
             var dbx = new Dropbox({ accessToken: $rootScope.dropboxToken });
             var fileInput = document.getElementById('file-upload');
             var file = fileInput.files[0];
-            dbx.filesUpload({path: '/' + patient.first_name + ' ' + patient.last_name + '/' + file.name, contents: file, mode: {'.tag': 'overwrite'}})
+            dbx.filesUpload({path: '/' + patient.first_name + ' ' + patient.last_name + '/' + file.name, contents: file, mode: {'.tag': 'overwrite', 'include_media_info':true}})
                 .then(function(response) {
                   console.log(response);
                     var xhr = new XMLHttpRequest();
@@ -271,7 +276,6 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
     $imageupload.imageupload();
     $scope.isEditable = false;
     $scope.editSaveButtonLabel = 'Edit';
-    
     $scope.updatePatient = function() {
         patientService.update({patientId: $rootScope.selectedPatient._id}, $rootScope.selectedPatient);
         //update cookies
@@ -344,7 +348,7 @@ app.controller('patientDetailsController', function($scope, $rootScope, patientS
 
 app.controller('patientListController', function($scope, $rootScope, userService, patientService, $cookies){
     $scope.patients = userService.query({userId: $rootScope.current_user_id});
-    
+    console.log($scope.patients);
     $scope.deletePatient = function(patient) {
         if (confirm('Are you sure you want to delete this patient?')) {
             patientService.remove({patientId: patient._id});
@@ -392,8 +396,6 @@ app.controller('dropboxController', function($scope, $rootScope, $cookies, $wind
             }
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == XMLHttpRequest.DONE) {
-
-
                     $scope.dropboxLabel = 'Dropbox Connected';
                     var responseText = xhr.responseText;
                     console.log(responseText);
@@ -485,19 +487,24 @@ app.controller('authController', function($scope, $http, $rootScope, $location, 
     };
 });
 
-app.controller('calendarController', function($scope, $http, $rootScope, $location, $cookies, appointmentService) {
-
+app.controller('calendarController', function($scope, $http, $rootScope, $location, $cookies) {
+    $('#calendar').fullCalendar({
+        // put your options and callbacks here
+    });
 });
 
 app.controller('appointmentsController', function($scope, $http, $rootScope, $location, $cookies, userService) {
+    $('#datetimepicker').datetimepicker();
     $scope.patients = userService.query({userId: $rootScope.current_user_id});
     $scope.appointment = {
         date_time: "",
         reason: ""
     };
-    
+    $scope.selectedPatient = null;
     $scope.addAppointment = function() {
+        $scope.appointment.date_time = $('#datetimepicker').data("DateTimePicker").date();
         console.log('patientId = ' + $scope.selectedPatient);
+        console.log('date_time = ' + $scope.appointment.date_time);
         //appointmentService.save({userId: $rootScope.current_user_id}, $scope.appointment);
         $http.post('/api/users/' + $rootScope.current_user_id + '/appointment?patient_id=' + $scope.selectedPatient
                    + '&date_time=' + $scope.appointment.date_time + '&reason=' + $scope.appointment.reason , $scope.user);
