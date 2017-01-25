@@ -88,7 +88,7 @@ function isAuthenticated (req, res, next) {
             if(err){
                 return res.send(500, err);
             }
-            return res.send(200,patients);
+            return res.status(200).send(patients);
         });
     });
 
@@ -269,8 +269,8 @@ function isAuthenticated (req, res, next) {
                 return res.status(200).send(appointments);
             });
         }
-        console.log('get all appointments for specific user request');
-        Appointment.find({'user_id': req.params.userId}, function(err, appointments){
+        console.log('get all appointments for specific user request after current date');
+        Appointment.find({'user_id': req.params.userId, date_time: { $gt: new Date()}}, function(err, appointments){
             if(err){
                 return res.status(500).send(err);
             }
